@@ -20,7 +20,8 @@ let bridge = null; // { alive, at, now } from the last bridge snapshot
 let l1Keys = { keys: '', lastWrong: '' }; // what the Level 1 keypad last sent (master only)
 
 document.body.innerHTML = topbar('Master control', 'Blackout · control room',
-  `<button class="btn btn-ghost btn-sm" id="revealBtn" type="button" aria-pressed="true">Hide answers</button>`) + `
+  `<button class="btn btn-danger btn-sm" id="sirenBtn" type="button" aria-pressed="false">Siren ON</button>
+   <button class="btn btn-ghost btn-sm" id="revealBtn" type="button" aria-pressed="true">Hide answers</button>`) + `
 <main class="wrap">
   <div id="banners"></div>
   <section class="panel" aria-label="Safety">
@@ -54,8 +55,37 @@ let revealPref = null;
 try { revealPref = localStorage.getItem('bo.reveal'); } catch {}
 setReveal(revealPref !== '0');
 $('#revealBtn').addEventListener('click', () => setReveal(!document.body.classList.contains('reveal')));
+// ----- siren switch (top bar) -----
+// lfc.ino sounds the siren + red lights for 10 s on /api/l6/test?mode=lose, so while the
+// switch is ON this page repeats it every 8 s. OFF = /api/event/stop (siren and red lights off).
+let sirenTimer = null;
+function sirenUi(on) {
+  $('#sirenBtn').textContent = on ? 'Siren OFF' : 'Siren ON';
+  $('#sirenBtn').className = 'btn btn-sm ' + (on ? 'btn-warn' : 'btn-danger');
+  $('#sirenBtn').setAttribute('aria-pressed', String(on));
+}
+$('#sirenBtn').addEventListener('click', () => {
+  if (sirenTimer) {
+    clearInterval(sirenTimer);
+    sirenTimer = null;
+    sirenUi(false);
+    boardCmd('st56', `/api/event/stop?key=${key()}`);
+    return;
+  }
+  const t = teamById(S?.active);
+  const live = t?.run.startedAt && !t.run.endedAt;
+  if (live && !confirm(`${t.name} is playing. The 5+6 station counts the siren as the room clock running out, so their run would end as TIME UP. Sound the siren anyway?`)) return;
+  const sound = () => boardCmd('st56', `/api/l6/test?mode=lose&key=${key()}`, true);
+  sound();
+  sirenTimer = setInterval(sound, 8000);
+  sirenUi(true);
+  toast('Siren on. Press "Siren OFF" to stop it.');
+});
 $('#pauseAll').addEventListener('click', async () => { if (await run('pauseAll', {})) refresh(); });
-$('#silence').addEventListener('click', () => boardCmd('st56', `/api/event/stop?key=${key()}`));
+$('#silence').addEventListener('click', () => {
+  if (sirenTimer) { clearInterval(sirenTimer); sirenTimer = null; sirenUi(false); }
+  boardCmd('st56', `/api/event/stop?key=${key()}`);
+});
 $$('[data-tab]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; renderTab(true); }));
 
 const key = () => encodeURIComponent(S?.settings.deviceKey || '');
