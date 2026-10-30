@@ -1,6 +1,7 @@
 # Netlify: static pages from public/, the API from netlify/functions/api.mjs.
-# Needs Upstash Redis: set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN
-# (plus MASTER_PASSWORD) under Site configuration -> Environment variables.
+# Data is kept in Netlify Blobs automatically (nothing to set up).
+# Optional: MASTER_PASSWORD under Project configuration -> Environment variables.
+# (If UPSTASH_REDIS_REST_URL / _TOKEN are set, Upstash Redis is used instead.)
 [build]
   publish = "public"
 
