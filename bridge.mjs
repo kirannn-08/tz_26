@@ -21,6 +21,7 @@ let deviceKey = '';
 let lastSettings = 0;
 let results = [];
 const lastSeen = {};
+let lastWarn = 0;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const stamp = () => new Date().toLocaleTimeString([], { hour12: false });
@@ -39,6 +40,12 @@ async function site(path, body) {
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(8000),
   });
+  if ((r.headers.get('content-type') || '').includes('text/html')) {
+    // Netlify "Visitor access" protection answers with a login page instead of the API
+    const e = new Error('site is behind Netlify visitor protection (turn it off: Project configuration → Access & security → Visitor access)');
+    e.status = 'protected';
+    throw e;
+  }
   let j = {};
   try { j = await r.json(); } catch {}
   if (!r.ok) { const e = new Error(j.error || `HTTP ${r.status}`); e.status = r.status; throw e; }
@@ -53,9 +60,12 @@ async function login() {
       console.log(`${stamp()}  logged in to ${SITE}`);
       return;
     } catch (e) {
-      console.log(`${stamp()}  login failed: ${e.message}`);
+      if (e.status !== 'protected' || Date.now() - lastWarn > 30000) {
+        console.log(`${stamp()}  login failed: ${e.message}`);
+        lastWarn = Date.now();
+      }
       if (e.status === 401) password = '';
-      else await sleep(3000);
+      else await sleep(e.status === 'protected' ? 5000 : 3000);
     }
   }
 }
@@ -131,7 +141,7 @@ async function main() {
       if (r.devices) { devices = r.devices; deviceKey = r.deviceKey || ''; lastSettings = Date.now(); }
       if (r.cmds?.length) results = await Promise.all(r.cmds.map(runCmd));
     } catch (e) {
-      if (e.status === 401 || e.status === 403) await login();
+      if (e.status === 401 || e.status === 403 || e.status === 'protected') await login();
       else console.log(`${stamp()}  site error: ${why(e)}`);
     }
     boards = await readBoards();
