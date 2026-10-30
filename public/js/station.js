@@ -555,7 +555,11 @@ function updateResult() {
   const rec = t?.levels[level];
   let html = '';
   if (level === 2 && dev?.unlocked && dev.code) html = resultBox('BRIDGE BALANCED · YOUR CODE', dev.code);
-  else if (level === 5 && dev?.state === 2 && dev.code) html = resultBox('GRID STABILISED · YOUR CODE', dev.code);
+  else if (level === 5 && dev?.state === 2) {
+    // Setup's L5 code wins over the code built into lfc.ino (sent once the site has the task as done)
+    const code = S.settings.l5Setup ? S.settings.l5Code : dev.code;
+    html = resultBox('GRID STABILISED · YOUR CODE', code || '…', code ? '' : 'Getting your code…');
+  }
   else if (rec?.status === 'solved') {
     html = {
       1: resultBox('CODE CORRECT', '', 'The coordinator will open Box 1.'),
