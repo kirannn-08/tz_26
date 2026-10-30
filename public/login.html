@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<script>try{var t=localStorage.getItem("bo.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<title>Coordinator login</title>
+</head>
+<body>
+<main class="center">
+  <div class="panel form-card">
+    <a href="/" class="muted" style="font-size:14px">← Blackout</a>
+    <h2 style="font-size:32px;margin:6px 0 4px">Coordinator login</h2>
+    <p class="note">Pick the station this laptop sits next to. Each station screen shows only its own level.</p>
+    <form id="f">
+      <div class="choice" role="radiogroup" aria-label="Station">
+        <label><input type="radio" name="role" value="st1"> Station 1 · Dead Signal</label>
+        <label><input type="radio" name="role" value="st2"> Station 2 · Instrument</label>
+        <label><input type="radio" name="role" value="st4"> Station 4 · Interlock</label>
+        <label><input type="radio" name="role" value="st56"> Station 5 + 6 · Grid / AZ-5</label>
+        <label><input type="radio" name="role" value="master"> Master control</label>
+      </div>
+      <label class="field">Password<input name="password" type="password" required autocomplete="current-password"></label>
+      <button class="btn btn-go btn-lg" type="submit">Log in</button>
+      <p id="err" class="bad-t" role="alert" style="margin:0"></p>
+    </form>
+  </div>
+</main>
+<script type="module">
+import { api, auth, $ } from '/js/common.js';
+const want = new URLSearchParams(location.search).get('role') || auth.role || 'st1';
+const radio = document.querySelector(`input[name=role][value="${want}"]`) || document.querySelector('input[name=role]');
+radio.checked = true;
+$('#f').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  $('#err').textContent = '';
+  try {
+    auth.clear();
+    const r = await api.act('login', { role: f.get('role'), password: f.get('password') });
+    auth.save(r.token, r.role);
+    location.href = r.role === 'master' ? '/master' : '/station';
+  } catch (err) { $('#err').textContent = err.message; }
+});
+</script>
+</body>
+</html>

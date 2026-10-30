@@ -1,0 +1,14 @@
+{
+  "name": "blackout-control-room",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Blackout escape event: registration, station screens and master control",
+  "scripts": {
+    "start": "node local-server.js",
+    "bridge": "node bridge.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

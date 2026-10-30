@@ -1,0 +1,30 @@
+# Netlify: static pages from public/, the API from netlify/functions/api.mjs.
+# Needs Upstash Redis: set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN
+# (plus MASTER_PASSWORD) under Site configuration -> Environment variables.
+[build]
+  publish = "public"
+
+[functions]
+  directory = "netlify/functions"
+
+# clean URLs: /master -> master.html
+[[redirects]]
+  from = "/login"
+  to = "/login.html"
+  status = 200
+[[redirects]]
+  from = "/register"
+  to = "/register.html"
+  status = 200
+[[redirects]]
+  from = "/station"
+  to = "/station.html"
+  status = 200
+[[redirects]]
+  from = "/master"
+  to = "/master.html"
+  status = 200
+[[redirects]]
+  from = "/level3-logs"
+  to = "/level3-logs.html"
+  status = 200

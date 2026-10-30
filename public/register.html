@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<script>try{var t=localStorage.getItem("bo.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<title>Team registration</title>
+</head>
+<body>
+<main class="center">
+  <div class="panel form-card">
+    <a href="/" class="muted" style="font-size:14px">← Blackout</a>
+    <h2 style="font-size:32px;margin:6px 0 4px">Team registration</h2>
+    <p class="note">2 to 4 members per team. Your team number is shown after you register; tell it to the coordinator at each station.</p>
+    <div id="closed" class="banner bad" hidden>Registration is closed. Please talk to a coordinator.</div>
+    <form id="f" novalidate>
+      <label class="field">Team name<input name="name" required maxlength="40" autocomplete="off"></label>
+      <label class="field">Member 1<input name="m1" required maxlength="40" autocomplete="off"></label>
+      <label class="field">Member 2<input name="m2" required maxlength="40" autocomplete="off"></label>
+      <label class="field">Member 3 (optional)<input name="m3" maxlength="40" autocomplete="off"></label>
+      <label class="field">Member 4 (optional)<input name="m4" maxlength="40" autocomplete="off"></label>
+      <label class="field">College / department (optional)<input name="college" maxlength="60"></label>
+      <label class="field">Phone or email (optional)<input name="contact" maxlength="60"></label>
+      <button class="btn btn-go btn-lg" type="submit">Register team</button>
+      <p id="err" class="bad-t" role="alert" style="margin:0"></p>
+    </form>
+    <div id="done" hidden style="text-align:center">
+      <p class="muted" style="margin:10px 0 4px">Registered. Your team number is</p>
+      <div class="readout huge done" id="no"></div>
+      <p id="tname" style="font-size:22px;font-weight:600;margin:10px 0"></p>
+      <button class="btn btn-ghost" type="button" id="again">Register another team</button>
+    </div>
+  </div>
+</main>
+<script type="module">
+import { api, $ } from '/js/common.js';
+api.state().then((s) => { if (!s.registrationOpen) { $('#closed').hidden = false; $('#f button').disabled = true; } }).catch(() => {});
+$('#f').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const members = ['m1', 'm2', 'm3', 'm4'].map((k) => f.get(k).trim()).filter(Boolean);
+  $('#err').textContent = '';
+  if (!f.get('name').trim()) return ($('#err').textContent = 'Enter a team name.');
+  if (members.length < 2) return ($('#err').textContent = 'A team needs at least 2 members.');
+  const btn = $('#f button'); btn.disabled = true;
+  try {
+    const r = await api.act('register', { name: f.get('name'), members, college: f.get('college'), contact: f.get('contact') });
+    $('#no').textContent = '#' + r.team.no;
+    $('#tname').textContent = r.team.name;
+    $('#f').hidden = true; $('#done').hidden = false;
+  } catch (err) { $('#err').textContent = err.message; }
+  btn.disabled = false;
+});
+$('#again').addEventListener('click', () => { $('#f').reset(); $('#f').hidden = false; $('#done').hidden = true; });
+</script>
+</body>
+</html>

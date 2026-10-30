@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<script>try{var t=localStorage.getItem("bo.theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<title>Blackout</title>
+</head>
+<body>
+<main class="center">
+  <div class="panel form-card" style="max-width:640px">
+    <div class="row" style="margin-bottom:14px">
+      <span id="logo"></span>
+      <div><h1 style="font-size:40px">BLACKOUT</h1><p class="muted" style="margin:2px 0 0">Shut the reactor down before the blackout · Technozion</p></div>
+    </div>
+    <p class="note">A six-level escape event. Teams of 2 to 4 clear the levels in order. Every level hands over a clue, and the last level needs all of them.</p>
+    <div style="display:grid;gap:10px">
+      <a class="btn btn-go btn-lg" href="/register">Register a team</a>
+      <a class="btn btn-lg" href="/login">Coordinator login: stations and master control</a>
+    </div>
+    <p class="muted" id="info" style="margin:14px 0 0;font-size:14px"></p>
+  </div>
+</main>
+<script type="module">
+import { TREFOIL, api } from '/js/common.js';
+document.getElementById('logo').innerHTML = TREFOIL.replace('class="trefoil"', 'class="trefoil" style="width:56px;height:56px"');
+api.state().then((s) => {
+  document.getElementById('info').textContent =
+    (s.registrationOpen ? 'Registration is open' : 'Registration is closed') + ' · ' + s.teamCount + ' teams registered';
+}).catch(() => {});
+</script>
+</body>
+</html>
