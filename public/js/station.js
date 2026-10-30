@@ -349,18 +349,21 @@ const startKey = (l) => {
 
 function watchStarts() {
   if (role !== 'st56') return;
-  watch('start5', startKey(5), (a, b) => { if (b) { boardStarted[5] = b; boardCommand('g5start', 5, true); } });
+  watch('start5', startKey(5), (a, b) => { if (b) { boardStarted[5] = b; g5RetryAt = Date.now(); boardCommand('g5start', 5, true); } });
 }
 
-// If this page was opened after the level had already started, start the board
-// only if it is sitting idle (never restart a game that is running).
+// While Level 5 is playing, the grid must be running. If the board sits idle (page opened
+// mid-level, or the first start was missed because the board was off), start it again,
+// at most every 5 s. A running or finished game is never restarted (only state 0 = idle).
+let g5RetryAt = 0;
 function ensureBoardStarted(j) {
   if (role !== 'st56') return;
   const key = startKey(5);
-  if (key && boardStarted[5] !== key) {
+  if (key && j.state === 0 && (boardStarted[5] !== key || Date.now() - g5RetryAt > 5000)) {
     boardStarted[5] = key;
-    if (j.state === 0) boardCommand('g5start', 5, true);
-  }
+    g5RetryAt = Date.now();
+    boardCommand('g5start', 5, true);
+  } else if (key) boardStarted[5] = key;
   syncRoomClock(j);
 }
 
